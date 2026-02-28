@@ -4,10 +4,12 @@ from .seeders import (
     seed_csv,
     seed_excel,
     seed_json,
+    seed_duckdb,
     seed_minio,
     seed_mongo,
     seed_parquet,
     seed_sql,
+    seed_xml,
 )
 
 OUTPUT_DIR = os.path.dirname(
@@ -18,7 +20,7 @@ OUTPUT_DIR = os.path.dirname(
 def main():
     os.chdir(OUTPUT_DIR)
 
-    for d in ["csv", "tsv", "json", "parquet", "excel", "sqlite"]:
+    for d in ["csv", "tsv", "json", "xml", "parquet", "excel", "sqlite", "duckdb"]:
         os.makedirs(d, exist_ok=True)
 
     db_user = os.environ.get("DB_USER", "testuser")
@@ -45,7 +47,9 @@ def main():
     seed_csv(",", "csv")
     seed_csv("\t", "tsv")
     seed_json()
+    seed_xml()
     seed_parquet()
+    seed_duckdb()
     seed_excel()
 
     # Object storage

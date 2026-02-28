@@ -20,6 +20,7 @@ run_test() {
 
 # --- Source definitions ---
 
+DUCKDB_FILE="ATTACH 'duckdb/test_data.duckdb' AS duckdb_db (TYPE DUCKDB);"
 SQLITE="ATTACH 'sqlite/test_data.db' AS sqlite_db (TYPE SQLITE);"
 PG="ATTACH 'dbname=testdb user=testuser password=testpass host=127.0.0.1 port=5432' AS pg (TYPE POSTGRES);"
 MYSQL="LOAD mysql_scanner; ATTACH 'host=127.0.0.1 port=3306 user=testuser password=testpass database=testdb' AS mysql_db (TYPE MYSQL);"
@@ -46,7 +47,8 @@ for src in \
 	"TSV|read_csv('tsv/artists.tsv', delim='\t')|read_csv('tsv/artworks.tsv', delim='\t')|" \
 	"JSON|'json/artists.json'|'json/artworks.json'|" \
 	"Parquet|'parquet/artists.parquet'|'parquet/artworks.parquet'|" \
-	"Excel|read_sheet('excel/artists_artworks.xlsx', sheet='Artists')|read_sheet('excel/artists_artworks.xlsx', sheet='Artworks')|LOAD rusty_sheet;"; do
+	"Excel|read_sheet('excel/artists_artworks.xlsx', sheet='Artists')|read_sheet('excel/artists_artworks.xlsx', sheet='Artworks')|LOAD rusty_sheet;" \
+	"XML|read_xml('xml/artists.xml')|read_xml('xml/artworks.xml')|LOAD webbed;"; do
 
 	IFS='|' read -r name artists artworks setup <<<"$src"
 	# shellcheck disable=SC2059
@@ -59,6 +61,7 @@ echo ""
 echo "=== Databases ==="
 
 for src in \
+	"DuckDB|duckdb_db.artists|duckdb_db.artworks|${DUCKDB_FILE}" \
 	"SQLite|sqlite_db.artists|sqlite_db.artworks|${SQLITE}" \
 	"PostgreSQL|pg.artists|pg.artworks|${PG}" \
 	"MySQL|mysql_db.artists|mysql_db.artworks|${MYSQL}" \
@@ -98,7 +101,9 @@ for src in \
 	"MongoDB x CSV|mongo_db.testdb.artists|'csv/artworks.csv'|${MONGO}" \
 	"Excel x PostgreSQL|read_sheet('excel/artists_artworks.xlsx', sheet='Artists')|pg.artworks|LOAD rusty_sheet; ${PG}" \
 	"PostgreSQL x MinIO|pg.artists|read_parquet('s3://testbucket/artworks.parquet')|${PG} ${MINIO}" \
-	"PostgreSQL x MySQL|pg.artists|mysql_db.artworks|${MYSQL} ${PG}"; do
+	"PostgreSQL x MySQL|pg.artists|mysql_db.artworks|${MYSQL} ${PG}" \
+	"XML x MongoDB|read_xml('xml/artists.xml')|mongo_db.testdb.artworks|LOAD webbed; ${MONGO}" \
+	"DuckDB x CSV|duckdb_db.artists|'csv/artworks.csv'|${DUCKDB_FILE}"; do
 
 	IFS='|' read -r name artists artworks setup <<<"$src"
 	# shellcheck disable=SC2059

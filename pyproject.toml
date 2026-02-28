@@ -3,15 +3,18 @@ name = "duckdb-test"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    "duckdb",
     "sqlalchemy",
     "mysql-connector-python",
     "psycopg2-binary",
     "pymongo",
     "openpyxl",
+    "pydantic",
 ]
 
 [project.scripts]
 seed = "seed.__main__:main"
+validate = "seed.validate:main"
 
 [tool.uv]
 package = true

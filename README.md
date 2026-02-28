@@ -33,6 +33,8 @@ uv run seed
 | JSON           | File     | Yes  | Yes   | Yes  | Built-in            | `COPY TO (FORMAT JSON)`        |
 | Parquet        | File     | Yes  | Yes   | Yes  | Built-in            | `COPY TO (FORMAT PARQUET)`     |
 | Excel          | File     | Yes  | No    | Yes  | `rusty_sheet`       | Read via `read_sheet()`        |
+| XML            | File     | Yes  | No    | Yes  | `webbed`            | Read via `read_xml()`          |
+| DuckDB         | File DB  | Yes  | Yes   | Yes  | Built-in            | Full ATTACH support            |
 | SQLite         | File DB  | Yes  | Yes   | Yes  | `sqlite_scanner`    | Full ATTACH support            |
 | PostgreSQL     | Docker   | Yes  | Yes   | Yes  | `postgres_scanner`  | Full ATTACH support            |
 | MySQL          | Docker   | Yes  | Yes   | Yes  | `mysql_scanner`     | Full ATTACH support            |
@@ -52,6 +54,7 @@ uv run seed
 | PostgreSQL 16  | 5432  | Postgres |
 | MongoDB 7      | 27017 | Mongo    |
 | MinIO          | 9000/9001 | S3   |
+| DuckDB         | —     | File     |
 | SQLite         | —     | File     |
 
 ### Flat Files
@@ -63,6 +66,8 @@ uv run seed
 | JSON    | `json/artists.json`, `json/artworks.json`                 |
 | Parquet | `parquet/artists.parquet`, `parquet/artworks.parquet`     |
 | Excel   | `excel/artists_artworks.xlsx` (Artists & Artworks sheets) |
+| XML     | `xml/artists.xml`, `xml/artworks.xml`                     |
+| DuckDB  | `duckdb/test_data.duckdb`                                 |
 | SQLite  | `sqlite/test_data.db`                                     |
 
 ### Object Storage
@@ -101,13 +106,22 @@ duckdb -c "SELECT * FROM read_csv('tsv/artists.tsv', delim='\t')"
 -- Excel (community extension)
 LOAD rusty_sheet;
 SELECT * FROM read_sheet('excel/artists_artworks.xlsx', sheet='Artists');
+
+-- XML (community extension)
+LOAD webbed;
+SELECT * FROM read_xml('xml/artists.xml');
 ```
 
 ### Databases
 
 ```sql
+-- DuckDB
+ATTACH 'duckdb/test_data.duckdb' AS duckdb_db (TYPE DUCKDB);
+SELECT * FROM duckdb_db.artists;
+
 -- SQLite
-SELECT * FROM sqlite_scan('sqlite/test_data.db', 'artists');
+ATTACH 'sqlite/test_data.db' AS sqlite_db (TYPE SQLITE);
+SELECT * FROM sqlite_db.artists;
 
 -- PostgreSQL
 ATTACH 'dbname=testdb user=testuser password=testpass host=127.0.0.1 port=5432' AS pg (TYPE POSTGRES);
@@ -159,24 +173,37 @@ SELECT * FROM read_gsheet('your_sheet_url', sheet='Artists');
 | [`mongo`](https://community-extensions.duckdb.org/extensions/mongo.html)            | Community | Yes  | No    | Query MongoDB              |
 | [`gsheets`](https://community-extensions.duckdb.org/extensions/gsheets.html)          | Community | Yes  | Partial| Read/write Google Sheets  |
 | [`rusty_sheet`](https://community-extensions.duckdb.org/extensions/rusty_sheet.html)      | Community | Yes  | No    | Read Excel/OpenDocument    |
+| [`webbed`](https://community-extensions.duckdb.org/extensions/webbed.html)           | Community | Yes  | No    | Read XML files             |
 | [`http_request`](https://community-extensions.duckdb.org/extensions/http_request.html)     | Community | Yes  | —     | HTTP requests from SQL     |
 
 ## Testing
 
-Run all 32 tests across every source and cross-source combination:
+### DuckDB CLI tests
+
+Run all 38 tests across every source and cross-source combination:
 
 ```bash
 bash test.sh
 ```
 
-The test suite covers four categories:
+Each source runs the same two queries (SELECT count, JOIN count) with `error()` assertions that fail with `"expected N, got M"` on mismatch.
 
 | Category       | Tests | What's tested                                    |
 |----------------|:-----:|--------------------------------------------------|
-| Flat Files     | 10    | SELECT, JOIN, aggregation, window, FILTER        |
-| Databases      | 10    | SELECT, JOIN, CTE, ROLLUP, EXISTS, NTILE         |
-| Object Storage | 3     | Read, JOIN, write + read back                    |
-| Cross-source   | 9     | JOINs between different source types (see below) |
+| Flat Files     | 12    | SELECT + JOIN per format                         |
+| Databases      | 12    | SELECT + JOIN per database                       |
+| Object Storage | 3     | SELECT, JOIN, write + read back                  |
+| Cross-source   | 11    | JOINs between different source types (see below) |
+
+### Pydantic validation
+
+Validate every row from every source against typed Pydantic schemas:
+
+```bash
+uv run validate
+```
+
+Reads each source via DuckDB's Python API and validates against `Artist` and `Artwork` models with field constraints (types, ranges, string lengths).
 
 ### Cross-source interoperability
 
@@ -193,6 +220,8 @@ DuckDB can JOIN data across any combination of sources in a single query. All co
 | Excel            | PostgreSQL       | File + Database                |
 | PostgreSQL       | MinIO (S3)       | Database + Object Storage      |
 | PostgreSQL       | MySQL            | Database + Database            |
+| XML              | MongoDB          | File + Database                |
+| DuckDB           | CSV              | File DB + File                 |
 
 This means you can query across completely different backends — e.g. join a PostgreSQL table with a Parquet file on MinIO, or combine an Excel spreadsheet with a MySQL database — all in standard SQL.
 
@@ -216,11 +245,13 @@ uv run ty check src/
 ```
 src/seed/              # Python seeder module
 ├── __init__.py
-├── __main__.py        # entry point
+├── __main__.py        # entry point (uv run seed)
 ├── data.py            # seed data
 ├── models.py          # SQLAlchemy models
-└── seeders.py         # seeder functions per format
-test.sh                # DuckDB CLI test suite (32 tests)
+├── schemas.py         # Pydantic validation schemas
+├── seeders.py         # seeder functions per format
+└── validate.py        # validation runner (uv run validate)
+test.sh                # DuckDB CLI test suite (38 tests)
 docker-compose.yml     # database containers
 pyproject.toml         # project config & dev tools
 .env                   # credentials & config

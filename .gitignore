@@ -12,9 +12,11 @@ uv.lock
 csv/
 tsv/
 json/
+xml/
 parquet/
 excel/
 sqlite/
+duckdb/
 
 # DuckDB
 *.duckdb

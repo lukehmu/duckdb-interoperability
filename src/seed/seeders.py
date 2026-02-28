@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import subprocess
+import xml.etree.ElementTree as ET
 
 import pymongo
 from openpyxl import Workbook
@@ -85,6 +86,41 @@ def seed_excel():
 
     wb.save("excel/artists_artworks.xlsx")
     print("Excel: created excel/artists_artworks.xlsx (Artists & Artworks sheets)")
+
+
+def seed_xml():
+    for name, fields, data in [
+        ("artists", ARTIST_FIELDS, ARTISTS_RAW),
+        ("artworks", ARTWORK_FIELDS, ARTWORKS_RAW),
+    ]:
+        root = ET.Element("rows")
+        for row in data:
+            elem = ET.SubElement(root, "row")
+            for field in fields:
+                child = ET.SubElement(elem, field)
+                child.text = str(row[field])
+        tree = ET.ElementTree(root)
+        ET.indent(tree)
+        tree.write(f"xml/{name}.xml", xml_declaration=True, encoding="unicode")
+    print("XML: created xml/artists.xml, xml/artworks.xml")
+
+
+def seed_duckdb():
+    cli = os.path.expanduser("~/.duckdb/cli/latest/duckdb")
+    db_path = "duckdb/test_data.duckdb"
+    if os.path.exists(db_path):
+        os.remove(db_path)
+    subprocess.run(
+        [
+            cli,
+            db_path,
+            "-c",
+            "CREATE TABLE artists AS SELECT * FROM 'csv/artists.csv';"
+            " CREATE TABLE artworks AS SELECT * FROM 'csv/artworks.csv';",
+        ],
+        check=True,
+    )
+    print("DuckDB: created duckdb/test_data.duckdb")
 
 
 def seed_minio(user, password, bucket):
