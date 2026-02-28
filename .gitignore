@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.egg-info/
+uv.lock
+.ruff_cache/
+
+# Environment
+.env
+
+# Seeded data (regenerate with: uv run seed)
+csv/
+tsv/
+json/
+parquet/
+excel/
+sqlite/
+
+# DuckDB
+*.duckdb
+*.wal
