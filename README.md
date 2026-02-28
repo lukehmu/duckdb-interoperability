@@ -61,14 +61,14 @@ uv run seed
 
 | Format  | Location                                                  |
 |---------|-----------------------------------------------------------|
-| CSV     | `csv/artists.csv`, `csv/artworks.csv`                     |
-| TSV     | `tsv/artists.tsv`, `tsv/artworks.tsv`                     |
-| JSON    | `json/artists.json`, `json/artworks.json`                 |
-| Parquet | `parquet/artists.parquet`, `parquet/artworks.parquet`     |
-| Excel   | `excel/artists_artworks.xlsx` (Artists & Artworks sheets) |
-| XML     | `xml/artists.xml`, `xml/artworks.xml`                     |
-| DuckDB  | `duckdb/test_data.duckdb`                                 |
-| SQLite  | `sqlite/test_data.db`                                     |
+| CSV     | `data/csv/artists.csv`, `data/csv/artworks.csv`                     |
+| TSV     | `data/tsv/artists.tsv`, `data/tsv/artworks.tsv`                     |
+| JSON    | `data/json/artists.json`, `data/json/artworks.json`                 |
+| Parquet | `data/parquet/artists.parquet`, `data/parquet/artworks.parquet`     |
+| Excel   | `data/excel/artists_artworks.xlsx` (Artists & Artworks sheets)      |
+| XML     | `data/xml/artists.xml`, `data/xml/artworks.xml`                     |
+| DuckDB  | `data/duckdb/test_data.duckdb`                                      |
+| SQLite  | `data/sqlite/test_data.db`                                          |
 
 ### Object Storage
 
@@ -96,31 +96,31 @@ All credentials and connection details are in `.env`:
 ### Flat files
 
 ```bash
-duckdb -c "SELECT * FROM 'csv/artists.csv'"
-duckdb -c "SELECT * FROM 'parquet/artworks.parquet'"
-duckdb -c "SELECT * FROM 'json/artists.json'"
-duckdb -c "SELECT * FROM read_csv('tsv/artists.tsv', delim='\t')"
+duckdb -c "SELECT * FROM 'data/csv/artists.csv'"
+duckdb -c "SELECT * FROM 'data/parquet/artworks.parquet'"
+duckdb -c "SELECT * FROM 'data/json/artists.json'"
+duckdb -c "SELECT * FROM read_csv('data/tsv/artists.tsv', delim='\t')"
 ```
 
 ```sql
 -- Excel (community extension)
 LOAD rusty_sheet;
-SELECT * FROM read_sheet('excel/artists_artworks.xlsx', sheet='Artists');
+SELECT * FROM read_sheet('data/excel/artists_artworks.xlsx', sheet='Artists');
 
 -- XML (community extension)
 LOAD webbed;
-SELECT * FROM read_xml('xml/artists.xml');
+SELECT * FROM read_xml('data/xml/artists.xml');
 ```
 
 ### Databases
 
 ```sql
 -- DuckDB
-ATTACH 'duckdb/test_data.duckdb' AS duckdb_db (TYPE DUCKDB);
+ATTACH 'data/duckdb/test_data.duckdb' AS duckdb_db (TYPE DUCKDB);
 SELECT * FROM duckdb_db.artists;
 
 -- SQLite
-ATTACH 'sqlite/test_data.db' AS sqlite_db (TYPE SQLITE);
+ATTACH 'data/sqlite/test_data.db' AS sqlite_db (TYPE SQLITE);
 SELECT * FROM sqlite_db.artists;
 
 -- PostgreSQL
@@ -243,6 +243,7 @@ uv run ty check src/
 ## Project Structure
 
 ```
+data/                  # Seeded data (regenerate with: uv run seed)
 src/seed/              # Python seeder module
 ├── __init__.py
 ├── __main__.py        # entry point (uv run seed)

@@ -20,8 +20,8 @@ run_test() {
 
 # --- Source definitions ---
 
-DUCKDB_FILE="ATTACH 'duckdb/test_data.duckdb' AS duckdb_db (TYPE DUCKDB);"
-SQLITE="ATTACH 'sqlite/test_data.db' AS sqlite_db (TYPE SQLITE);"
+DUCKDB_FILE="ATTACH 'data/duckdb/test_data.duckdb' AS duckdb_db (TYPE DUCKDB);"
+SQLITE="ATTACH 'data/sqlite/test_data.db' AS sqlite_db (TYPE SQLITE);"
 PG="ATTACH 'dbname=testdb user=testuser password=testpass host=127.0.0.1 port=5432' AS pg (TYPE POSTGRES);"
 MYSQL="LOAD mysql_scanner; ATTACH 'host=127.0.0.1 port=3306 user=testuser password=testpass database=testdb' AS mysql_db (TYPE MYSQL);"
 MARIA="LOAD mysql_scanner; ATTACH 'host=127.0.0.1 port=3307 user=testuser password=testpass database=testdb' AS maria_db (TYPE MYSQL);"
@@ -43,12 +43,12 @@ JOIN_SQL="SELECT $(printf "$ASSERT" 10 10) FROM %s a JOIN %s w ON a.id = w.artis
 echo "=== Flat Files ==="
 
 for src in \
-	"CSV|'csv/artists.csv'|'csv/artworks.csv'|" \
-	"TSV|read_csv('tsv/artists.tsv', delim='\t')|read_csv('tsv/artworks.tsv', delim='\t')|" \
-	"JSON|'json/artists.json'|'json/artworks.json'|" \
-	"Parquet|'parquet/artists.parquet'|'parquet/artworks.parquet'|" \
-	"Excel|read_sheet('excel/artists_artworks.xlsx', sheet='Artists')|read_sheet('excel/artists_artworks.xlsx', sheet='Artworks')|LOAD rusty_sheet;" \
-	"XML|read_xml('xml/artists.xml')|read_xml('xml/artworks.xml')|LOAD webbed;"; do
+	"CSV|'data/csv/artists.csv'|'data/csv/artworks.csv'|" \
+	"TSV|read_csv('data/tsv/artists.tsv', delim='\t')|read_csv('data/tsv/artworks.tsv', delim='\t')|" \
+	"JSON|'data/json/artists.json'|'data/json/artworks.json'|" \
+	"Parquet|'data/parquet/artists.parquet'|'data/parquet/artworks.parquet'|" \
+	"Excel|read_sheet('data/excel/artists_artworks.xlsx', sheet='Artists')|read_sheet('data/excel/artists_artworks.xlsx', sheet='Artworks')|LOAD rusty_sheet;" \
+	"XML|read_xml('data/xml/artists.xml')|read_xml('data/xml/artworks.xml')|LOAD webbed;"; do
 
 	IFS='|' read -r name artists artworks setup <<<"$src"
 	# shellcheck disable=SC2059
@@ -93,17 +93,17 @@ echo ""
 echo "=== Cross-source ==="
 
 for src in \
-	"CSV x Parquet|'csv/artists.csv'|'parquet/artworks.parquet'|" \
-	"JSON x SQLite|'json/artists.json'|sqlite_db.artworks|${SQLITE}" \
-	"SQLite x JSON|sqlite_db.artists|'json/artworks.json'|${SQLITE}" \
-	"MySQL x Parquet|mysql_db.artists|'parquet/artworks.parquet'|${MYSQL}" \
-	"MariaDB x TSV|maria_db.artists|read_csv('tsv/artworks.tsv', delim='\t')|${MARIA}" \
-	"MongoDB x CSV|mongo_db.testdb.artists|'csv/artworks.csv'|${MONGO}" \
-	"Excel x PostgreSQL|read_sheet('excel/artists_artworks.xlsx', sheet='Artists')|pg.artworks|LOAD rusty_sheet; ${PG}" \
+	"CSV x Parquet|'data/csv/artists.csv'|'data/parquet/artworks.parquet'|" \
+	"JSON x SQLite|'data/json/artists.json'|sqlite_db.artworks|${SQLITE}" \
+	"SQLite x JSON|sqlite_db.artists|'data/json/artworks.json'|${SQLITE}" \
+	"MySQL x Parquet|mysql_db.artists|'data/parquet/artworks.parquet'|${MYSQL}" \
+	"MariaDB x TSV|maria_db.artists|read_csv('data/tsv/artworks.tsv', delim='\t')|${MARIA}" \
+	"MongoDB x CSV|mongo_db.testdb.artists|'data/csv/artworks.csv'|${MONGO}" \
+	"Excel x PostgreSQL|read_sheet('data/excel/artists_artworks.xlsx', sheet='Artists')|pg.artworks|LOAD rusty_sheet; ${PG}" \
 	"PostgreSQL x MinIO|pg.artists|read_parquet('s3://testbucket/artworks.parquet')|${PG} ${MINIO}" \
 	"PostgreSQL x MySQL|pg.artists|mysql_db.artworks|${MYSQL} ${PG}" \
-	"XML x MongoDB|read_xml('xml/artists.xml')|mongo_db.testdb.artworks|LOAD webbed; ${MONGO}" \
-	"DuckDB x CSV|duckdb_db.artists|'csv/artworks.csv'|${DUCKDB_FILE}"; do
+	"XML x MongoDB|read_xml('data/xml/artists.xml')|mongo_db.testdb.artworks|LOAD webbed; ${MONGO}" \
+	"DuckDB x CSV|duckdb_db.artists|'data/csv/artworks.csv'|${DUCKDB_FILE}"; do
 
 	IFS='|' read -r name artists artworks setup <<<"$src"
 	# shellcheck disable=SC2059

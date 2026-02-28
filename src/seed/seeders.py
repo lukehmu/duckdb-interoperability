@@ -43,18 +43,18 @@ def seed_csv(delimiter, ext):
         ("artists", ARTIST_FIELDS, ARTISTS_RAW),
         ("artworks", ARTWORK_FIELDS, ARTWORKS_RAW),
     ]:
-        with open(f"{ext}/{name}.{ext}", "w", newline="") as f:
+        with open(f"data/{ext}/{name}.{ext}", "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=fields, delimiter=delimiter)
             w.writeheader()
             w.writerows(data)
-    print(f"{ext.upper()}: created {ext}/artists.{ext}, {ext}/artworks.{ext}")
+    print(f"{ext.upper()}: created data/{ext}/artists.{ext}, data/{ext}/artworks.{ext}")
 
 
 def seed_json():
     for name, data in [("artists", ARTISTS_RAW), ("artworks", ARTWORKS_RAW)]:
-        with open(f"json/{name}.json", "w") as f:
+        with open(f"data/json/{name}.json", "w") as f:
             json.dump(data, f, indent=2)
-    print("JSON: created json/artists.json, json/artworks.json")
+    print("JSON: created data/json/artists.json, data/json/artworks.json")
 
 
 def seed_parquet():
@@ -64,11 +64,11 @@ def seed_parquet():
             [
                 duckdb,
                 "-c",
-                f"COPY (SELECT * FROM 'csv/{name}.csv') TO 'parquet/{name}.parquet' (FORMAT PARQUET);",
+                f"COPY (SELECT * FROM 'data/csv/{name}.csv') TO 'data/parquet/{name}.parquet' (FORMAT PARQUET);",
             ],
             check=True,
         )
-    print("Parquet: created parquet/artists.parquet, parquet/artworks.parquet")
+    print("Parquet: created data/parquet/artists.parquet, data/parquet/artworks.parquet")
 
 
 def seed_excel():
@@ -84,8 +84,8 @@ def seed_excel():
     for d in ARTWORKS_RAW:
         ws2.append([d[f] for f in ARTWORK_FIELDS])
 
-    wb.save("excel/artists_artworks.xlsx")
-    print("Excel: created excel/artists_artworks.xlsx (Artists & Artworks sheets)")
+    wb.save("data/excel/artists_artworks.xlsx")
+    print("Excel: created data/excel/artists_artworks.xlsx (Artists & Artworks sheets)")
 
 
 def seed_xml():
@@ -101,13 +101,13 @@ def seed_xml():
                 child.text = str(row[field])
         tree = ET.ElementTree(root)
         ET.indent(tree)
-        tree.write(f"xml/{name}.xml", xml_declaration=True, encoding="unicode")
-    print("XML: created xml/artists.xml, xml/artworks.xml")
+        tree.write(f"data/xml/{name}.xml", xml_declaration=True, encoding="unicode")
+    print("XML: created data/xml/artists.xml, data/xml/artworks.xml")
 
 
 def seed_duckdb():
     cli = os.path.expanduser("~/.duckdb/cli/latest/duckdb")
-    db_path = "duckdb/test_data.duckdb"
+    db_path = "data/duckdb/test_data.duckdb"
     if os.path.exists(db_path):
         os.remove(db_path)
     subprocess.run(
@@ -115,12 +115,12 @@ def seed_duckdb():
             cli,
             db_path,
             "-c",
-            "CREATE TABLE artists AS SELECT * FROM 'csv/artists.csv';"
-            " CREATE TABLE artworks AS SELECT * FROM 'csv/artworks.csv';",
+            "CREATE TABLE artists AS SELECT * FROM 'data/csv/artists.csv';"
+            " CREATE TABLE artworks AS SELECT * FROM 'data/csv/artworks.csv';",
         ],
         check=True,
     )
-    print("DuckDB: created duckdb/test_data.duckdb")
+    print("DuckDB: created data/duckdb/test_data.duckdb")
 
 
 def seed_minio(user, password, bucket):
@@ -134,7 +134,7 @@ def seed_minio(user, password, bucket):
             [
                 duckdb,
                 "-c",
-                f"{secret_sql} COPY (SELECT * FROM 'parquet/{name}.parquet') TO 's3://{bucket}/{name}.parquet' (FORMAT PARQUET);",
+                f"{secret_sql} COPY (SELECT * FROM 'data/parquet/{name}.parquet') TO 's3://{bucket}/{name}.parquet' (FORMAT PARQUET);",
             ],
             check=True,
         )

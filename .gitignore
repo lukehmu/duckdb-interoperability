@@ -9,15 +9,4 @@ uv.lock
 .env
 
 # Seeded data (regenerate with: uv run seed)
-csv/
-tsv/
-json/
-xml/
-parquet/
-excel/
-sqlite/
-duckdb/
-
-# DuckDB
-*.duckdb
-*.wal
+data/

@@ -21,7 +21,7 @@ def main():
     os.chdir(OUTPUT_DIR)
 
     for d in ["csv", "tsv", "json", "xml", "parquet", "excel", "sqlite", "duckdb"]:
-        os.makedirs(d, exist_ok=True)
+        os.makedirs(f"data/{d}", exist_ok=True)
 
     db_user = os.environ.get("DB_USER", "testuser")
     db_password = os.environ.get("DB_PASSWORD", "testpass")
@@ -40,7 +40,7 @@ def main():
         f"postgresql+psycopg2://{db_user}:{db_password}@127.0.0.1:5432/{db_name}",
         "PostgreSQL",
     )
-    seed_sql("sqlite:///sqlite/test_data.db", "SQLite")
+    seed_sql("sqlite:///data/sqlite/test_data.db", "SQLite")
     seed_mongo(db_user, db_password, db_name)
 
     # Flat files
