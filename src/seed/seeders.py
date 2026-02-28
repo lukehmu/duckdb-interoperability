@@ -1,3 +1,9 @@
+"""Seeder functions — one per output format/destination.
+
+Each function writes the same artist/artwork dataset into a different storage
+backend so DuckDB can query them all through a unified SQL interface.
+"""
+
 import csv
 import json
 import os
@@ -10,7 +16,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from .data import ARTIST_FIELDS, ARTISTS_RAW, ARTWORK_FIELDS, ARTWORKS_RAW
-from .models import Artist, Artwork, Base
+from .schemas import Base, DBArtist, DBArtwork
 
 
 def seed_sql(url, label):
@@ -18,8 +24,8 @@ def seed_sql(url, label):
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     with Session(engine) as session:
-        session.add_all([Artist(**d) for d in ARTISTS_RAW])
-        session.add_all([Artwork(**d) for d in ARTWORKS_RAW])
+        session.add_all([DBArtist(**d) for d in ARTISTS_RAW])
+        session.add_all([DBArtwork(**d) for d in ARTWORKS_RAW])
         session.commit()
     engine.dispose()
     print(f"{label}: seeded {len(ARTISTS_RAW)} artists, {len(ARTWORKS_RAW)} artworks")
@@ -59,16 +65,18 @@ def seed_json():
 
 def seed_parquet():
     duckdb = os.path.expanduser("~/.duckdb/cli/latest/duckdb")
-    for name in ["artists", "artworks"]:
-        subprocess.run(
-            [
-                duckdb,
-                "-c",
-                f"COPY (SELECT * FROM 'data/csv/{name}.csv') TO 'data/parquet/{name}.parquet' (FORMAT PARQUET);",
-            ],
-            check=True,
-        )
-    print("Parquet: created data/parquet/artists.parquet, data/parquet/artworks.parquet")
+    subprocess.run(
+        [
+            duckdb,
+            "-c",
+            "COPY (SELECT * FROM 'data/csv/artists.csv') TO 'data/parquet/artists.parquet' (FORMAT PARQUET);"
+            " COPY (SELECT * FROM 'data/csv/artworks.csv') TO 'data/parquet/artworks.parquet' (FORMAT PARQUET);",
+        ],
+        check=True,
+    )
+    print(
+        "Parquet: created data/parquet/artists.parquet, data/parquet/artworks.parquet"
+    )
 
 
 def seed_excel():
@@ -125,19 +133,16 @@ def seed_duckdb():
 
 def seed_minio(user, password, bucket):
     duckdb = os.path.expanduser("~/.duckdb/cli/latest/duckdb")
-    secret_sql = (
-        f"CREATE SECRET minio_secret (TYPE S3, KEY_ID '{user}', SECRET '{password}', "
-        f"ENDPOINT '127.0.0.1:9000', URL_STYLE 'path', USE_SSL false);"
+    subprocess.run(
+        [
+            duckdb,
+            "-c",
+            f"CREATE SECRET (TYPE S3, KEY_ID '{user}', SECRET '{password}', ENDPOINT '127.0.0.1:9000', URL_STYLE 'path', USE_SSL false);"
+            f" COPY (SELECT * FROM 'data/parquet/artists.parquet') TO 's3://{bucket}/artists.parquet' (FORMAT PARQUET);"
+            f" COPY (SELECT * FROM 'data/parquet/artworks.parquet') TO 's3://{bucket}/artworks.parquet' (FORMAT PARQUET);",
+        ],
+        check=True,
     )
-    for name in ["artists", "artworks"]:
-        subprocess.run(
-            [
-                duckdb,
-                "-c",
-                f"{secret_sql} COPY (SELECT * FROM 'data/parquet/{name}.parquet') TO 's3://{bucket}/{name}.parquet' (FORMAT PARQUET);",
-            ],
-            check=True,
-        )
     print(
         f"MinIO: seeded s3://{bucket}/artists.parquet, s3://{bucket}/artworks.parquet"
     )

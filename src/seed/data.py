@@ -1,3 +1,5 @@
+"""Static seed data for 5 artists and 10 artworks (2 per artist)."""
+
 ARTIST_FIELDS = ["id", "name", "birth_year", "nationality"]
 ARTWORK_FIELDS = ["id", "artist_id", "title", "year", "medium"]
 

@@ -10,11 +10,15 @@ dependencies = [
     "pymongo",
     "openpyxl",
     "pydantic",
+    "pyarrow",
+    "polars",
+    "pandera[polars]",
 ]
 
 [project.scripts]
 seed = "seed.__main__:main"
 validate = "seed.validate:main"
+polars = "seed.etl:main"
 
 [tool.uv]
 package = true

@@ -1,10 +1,13 @@
+"""Entry point for ``uv run seed`` — seeds all data sources."""
+
 import os
 
+from . import PROJECT_ROOT
 from .seeders import (
     seed_csv,
+    seed_duckdb,
     seed_excel,
     seed_json,
-    seed_duckdb,
     seed_minio,
     seed_mongo,
     seed_parquet,
@@ -12,15 +15,21 @@ from .seeders import (
     seed_xml,
 )
 
-OUTPUT_DIR = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
-
 
 def main():
-    os.chdir(OUTPUT_DIR)
+    os.chdir(PROJECT_ROOT)
 
-    for d in ["csv", "tsv", "json", "xml", "parquet", "excel", "sqlite", "duckdb"]:
+    for d in [
+        "csv",
+        "tsv",
+        "json",
+        "xml",
+        "parquet",
+        "excel",
+        "sqlite",
+        "duckdb",
+        "polars",
+    ]:
         os.makedirs(f"data/{d}", exist_ok=True)
 
     db_user = os.environ.get("DB_USER", "testuser")

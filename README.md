@@ -195,6 +195,16 @@ Each source runs the same two queries (SELECT count, JOIN count) with `error()` 
 | Object Storage | 3     | SELECT, JOIN, write + read back                  |
 | Cross-source   | 11    | JOINs between different source types (see below) |
 
+### Polars ETL pipeline
+
+Reads every source via DuckDB's Python API, converts to Polars lazy frames, joins artists + artworks into a flat table, validates with Pandera, writes per-source parquet files, and compares all outputs to verify every source produces identical data:
+
+```bash
+uv run polars
+```
+
+Output: `data/polars/{source}.parquet` (13 files, 10 rows x 8 columns each).
+
 ### Pydantic validation
 
 Validate every row from every source against typed Pydantic schemas:
@@ -248,10 +258,11 @@ src/seed/              # Python seeder module
 ├── __init__.py
 ├── __main__.py        # entry point (uv run seed)
 ├── data.py            # seed data
-├── models.py          # SQLAlchemy models
-├── schemas.py         # Pydantic validation schemas
+├── schemas.py         # SQLAlchemy, Pydantic, and Pandera schemas
+├── sources.py         # DuckDB SQL definitions for every data source
 ├── seeders.py         # seeder functions per format
-└── validate.py        # validation runner (uv run validate)
+├── validate.py        # validation runner (uv run validate)
+└── etl.py             # Polars ETL pipeline (uv run polars)
 test.sh                # DuckDB CLI test suite (38 tests)
 docker-compose.yml     # database containers
 pyproject.toml         # project config & dev tools
