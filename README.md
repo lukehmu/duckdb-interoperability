@@ -5,7 +5,7 @@ A test project for querying multiple data sources with DuckDB — databases, fla
 ## Prerequisites
 
 - [uv](https://docs.astral.sh/uv/)
-- [DuckDB CLI](https://duckdb.org/docs/installation/)
+- [DuckDB CLI](https://duckdb.org/docs/installation/) — install with `curl https://install.duckdb.org | sh`
 - [Docker](https://docs.docker.com/get-docker/)
 
 ## Setup
@@ -152,14 +152,14 @@ SELECT * FROM read_gsheet('your_sheet_url', sheet='Artists');
 
 | Extension          | Type      | Read | Write | Purpose                    |
 |--------------------|-----------|:----:|:-----:|----------------------------|
-| `sqlite_scanner`   | Core      | Yes  | Yes   | Query SQLite databases     |
-| `postgres_scanner` | Core      | Yes  | Yes   | Query PostgreSQL databases |
-| `mysql_scanner`    | Core      | Yes  | Yes   | Query MySQL/MariaDB        |
-| `httpfs`           | Core      | Yes  | S3 only| Read HTTP, read/write S3  |
-| `mongo`            | Community | Yes  | No    | Query MongoDB              |
-| `gsheets`          | Community | Yes  | Partial| Read/write Google Sheets  |
-| `rusty_sheet`      | Community | Yes  | No    | Read Excel/OpenDocument    |
-| `http_request`     | Community | Yes  | —     | HTTP requests from SQL     |
+| [`sqlite_scanner`](https://duckdb.org/docs/extensions/sqlite)   | Core      | Yes  | Yes   | Query SQLite databases     |
+| [`postgres_scanner`](https://duckdb.org/docs/extensions/postgres) | Core      | Yes  | Yes   | Query PostgreSQL databases |
+| [`mysql_scanner`](https://duckdb.org/docs/extensions/mysql)    | Core      | Yes  | Yes   | Query MySQL/MariaDB        |
+| [`httpfs`](https://duckdb.org/docs/extensions/httpfs)           | Core      | Yes  | S3 only| Read HTTP, read/write S3  |
+| [`mongo`](https://community-extensions.duckdb.org/extensions/mongo.html)            | Community | Yes  | No    | Query MongoDB              |
+| [`gsheets`](https://community-extensions.duckdb.org/extensions/gsheets.html)          | Community | Yes  | Partial| Read/write Google Sheets  |
+| [`rusty_sheet`](https://community-extensions.duckdb.org/extensions/rusty_sheet.html)      | Community | Yes  | No    | Read Excel/OpenDocument    |
+| [`http_request`](https://community-extensions.duckdb.org/extensions/http_request.html)     | Community | Yes  | —     | HTTP requests from SQL     |
 
 ## Testing
 
